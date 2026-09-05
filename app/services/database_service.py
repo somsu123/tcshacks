@@ -136,21 +136,10 @@ class DatabaseService:
 
     @staticmethod
     def get_transaction(db: Session, transaction_id: str) -> Optional[Transaction]:
-        """
-        Retrieve a transaction by ID.
-
-        Args:
-            db: Database session
-            transaction_id: Transaction UUID
-
-        Returns:
-            Transaction or None
-        """
+        """Retrieve a transaction by ID."""
         try:
-            uuid_obj = UUID(transaction_id) if isinstance(transaction_id, str) else transaction_id
-            return db.query(Transaction).filter(Transaction.id == str(uuid_obj)).first()
+            return db.query(Transaction).filter(Transaction.id == str(transaction_id)).first()
         except Exception as e:
-            # Handle invalid UUID format or database errors
             print(f"Warning: Could not get transaction {transaction_id}: {e}")
             return None
 

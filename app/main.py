@@ -550,12 +550,63 @@ async def update_risk_thresholds(thresholds: RiskThresholdUpdate, db: Session = 
 
 @app.post("/transactions/load-sample", tags=["Transactions"])
 async def load_sample_data(db: Session = Depends(get_db)):
+    """Reload the demo seed transactions (clears existing and re-seeds)."""
+    seed_file = Path(__file__).parent / "data" / "demo_transactions.json"
     try:
-        import sys, os
-        sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-        from scripts.generate_synthetic_transactions import generate_and_load
-        count = generate_and_load(db)
-        return {"message": f"Loaded {count} synthetic transactions", "count": count}
+        if not seed_file.exists():
+            raise HTTPException(status_code=404, detail="Demo data file not found")
+
+        with open(seed_file) as f:
+            seed_data = json.load(f)
+
+        detector = get_anomaly_detector()
+        generator = get_explanation_generator()
+        count = 0
+
+        for item in seed_data:
+            if isinstance(item.get("timestamp"), str):
+                item["timestamp"] = datetime.fromisoformat(
+                    item["timestamp"].replace("Z", "+00:00")
+                )
+            item.setdefault("account_id", "DEMO_ACCT_001")
+
+            # Always insert fresh (skip if UUID already present)
+            existing = db_service.get_transaction(db, item.get("id", ""))
+            if existing:
+                continue
+
+            risk_score, factors = detector.calculate_risk_score(item)
+            risk_level = get_risk_level(risk_score)
+            explanation_data = generator.generate_explanation(
+                transaction=item,
+                risk_score=risk_score,
+                factors=factors,
+            )
+
+            db_service.create_transaction(
+                db,
+                account_id=item.get("account_id", "DEMO_ACCT_001"),
+                amount=item["amount"],
+                payee=item["payee"],
+                timestamp=item["timestamp"],
+                reference=item["reference"],
+                payee_is_new=item.get("payee_is_new", False),
+                location_country=item.get("location_country"),
+                location_lat=item.get("location_lat"),
+                location_lon=item.get("location_lon"),
+                risk_score=risk_score,
+                risk_level=risk_level,
+                factors=factors,
+                confidence=explanation_data.get("confidence"),
+                explanation=explanation_data.get("explanation"),
+                risk_factors_detailed=explanation_data.get("risk_factors"),
+                recommended_action=explanation_data.get("recommended_action"),
+            )
+            count += 1
+
+        return {"message": f"Loaded {count} sample transactions", "count": count}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load sample data: {str(e)}")
 

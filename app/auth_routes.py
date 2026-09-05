@@ -19,7 +19,7 @@ from app.auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from app.db_models import User
-from app.database import SessionLocal
+from app.database import get_db
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -57,7 +57,7 @@ class UserResponse(BaseModel):
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserRegister, db: Session = Depends(SessionLocal)):
+async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     """
     Register a new user.
     
@@ -94,7 +94,7 @@ async def register(user_data: UserRegister, db: Session = Depends(SessionLocal))
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(credentials: UserLogin, db: Session = Depends(SessionLocal)):
+async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     """
     Login with email and password.
     

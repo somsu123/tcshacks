@@ -1,22 +1,14 @@
-"""
-FraudShield Authentication Configuration
-
-JWT-based authentication using JWT with SQLAlchemy backend.
-Provides user registration, login, and session management.
-"""
-
 import os
+import bcrypt
 from datetime import datetime, timedelta
 from typing import Optional
-from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
+from app.database import get_db
 from app.db_models import User
 
 
@@ -27,21 +19,18 @@ SECRET_KEY = os.getenv(
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # Bearer token security
 security = HTTPBearer()
 
 
 def hash_password(password: str) -> str:
-    """Hash a password."""
-    return pwd_context.hash(password)
+    """Hash a password using bcrypt."""
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against a hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verify a password against a bcrypt hash."""
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -66,7 +55,7 @@ def decode_token(token: str) -> dict:
         return None
 
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(SessionLocal)) -> User:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> User:
     """
     Get the current authenticated user from JWT token.
     
@@ -97,16 +86,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    try:
-        user_uuid = UUID(user_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user ID format",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    user = db.query(User).filter(User.id == user_uuid).first()
+    user = db.query(User).filter(User.id == str(user_id)).first()
     
     if not user or not user.is_active:
         raise HTTPException(
@@ -127,7 +107,7 @@ class OptionalAuthBackend:
     """
     
     @staticmethod
-    async def get_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(SessionLocal)) -> Optional[User]:
+    async def get_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> Optional[User]:
         """Get current user if authenticated, else return None."""
         try:
             return await get_current_user(credentials, db)

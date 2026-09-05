@@ -134,14 +134,76 @@ class MockExplanationGenerator:
         )
 
 
+class GeminiExplanationGenerator:
+    """Gemini-powered explanation generator."""
+
+    def __init__(self):
+        from app.providers.llm.gemini_provider import GeminiProvider
+        self._provider = GeminiProvider()
+        self._mock = MockExplanationGenerator()
+
+    def generate_explanation(
+        self, transaction: dict, risk_score: float, factors: list[str]
+    ) -> dict:
+        import asyncio
+        from app.providers.llm.base import ExplanationRequest
+
+        timestamp = transaction.get("timestamp")
+        if hasattr(timestamp, "isoformat"):
+            timestamp_str = timestamp.isoformat()
+        else:
+            timestamp_str = str(timestamp) if timestamp else ""
+
+        request = ExplanationRequest(
+            transaction_amount=transaction.get("amount", 0),
+            transaction_payee=transaction.get("payee", ""),
+            transaction_timestamp=timestamp_str,
+            transaction_reference=transaction.get("reference", ""),
+            risk_score=risk_score,
+            risk_factors=factors,
+        )
+
+        try:
+            loop = asyncio.new_event_loop()
+            response = loop.run_until_complete(self._provider.generate_explanation(request))
+            loop.close()
+
+            return {
+                "risk_level": self._get_risk_level(risk_score),
+                "confidence": response.confidence,
+                "explanation": response.explanation,
+                "risk_factors": [
+                    f"{rf.number}. {rf.title} - {rf.description}"
+                    for rf in response.risk_factors_detailed
+                ],
+                "recommended_action": response.recommended_action,
+            }
+        except Exception as e:
+            print(f"GeminiExplanationGenerator: Error — {e}. Falling back to mock.")
+            return self._mock.generate_explanation(transaction, risk_score, factors)
+
+    def _get_risk_level(self, score: float) -> str:
+        from app.config import RISK_THRESHOLDS
+        if score >= RISK_THRESHOLDS["high"]:
+            return "high"
+        elif score >= RISK_THRESHOLDS["medium"]:
+            return "medium"
+        return "low"
+
+
 def get_explanation_generator() -> ExplanationGeneratorProtocol:
     """
     Factory function to get the appropriate explanation generator.
 
-    In production, will check environment variables:
-    - If AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY are set,
-      returns AzureOpenAIExplanationGenerator
-    - Otherwise, returns MockExplanationGenerator
+    Checks LLM_PROVIDER env var:
+    - gemini → GeminiExplanationGenerator (uses GEMINI_API_KEY)
+    - openai → OpenAI-compatible provider
+    - mock (default) → MockExplanationGenerator
     """
-    # MVP: Always return mock
+    import os
+    provider = os.getenv("LLM_PROVIDER", "mock").lower()
+
+    if provider == "gemini":
+        return GeminiExplanationGenerator()
+
     return MockExplanationGenerator()
