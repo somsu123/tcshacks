@@ -1,0 +1,102 @@
+[
+  {
+    "id": "invoice_redirect",
+    "name": "Invoice Redirection Fraud",
+    "description": "Fraudster impersonates a supplier and requests payment to a different account, often claiming updated bank details.",
+    "category": "business_email_compromise",
+    "severity": "high",
+    "trigger_factors": ["NEW_PAYEE", "AMOUNT_SPIKE"],
+    "keywords": ["invoice", "payment", "account", "bank details", "updated", "new account"],
+    "recommended_action": "Contact the supplier using known contact details to verify the payment request. Never use contact information from the suspicious message."
+  },
+  {
+    "id": "ceo_fraud",
+    "name": "CEO/Executive Impersonation",
+    "description": "Fraudster impersonates a company executive to authorize urgent, confidential payments bypassing normal approval processes.",
+    "category": "business_email_compromise",
+    "severity": "critical",
+    "trigger_factors": ["SUSPICIOUS_REFERENCE", "UNUSUAL_TIMING", "AMOUNT_SPIKE"],
+    "keywords": ["urgent", "confidential", "asap", "immediately", "wire", "secret", "private matter"],
+    "recommended_action": "Verify the request directly with the executive through a known phone number. Do not respond to the suspicious message."
+  },
+  {
+    "id": "supplier_impersonation",
+    "name": "Supplier Impersonation",
+    "description": "Fraudster creates a similarly-named company or spoofs a legitimate supplier to intercept payments.",
+    "category": "impersonation",
+    "severity": "high",
+    "trigger_factors": ["NEW_PAYEE"],
+    "keywords": ["supplier", "vendor", "payment due", "overdue", "reminder"],
+    "recommended_action": "Verify the supplier's bank details match your records. Call the supplier using contact information from your files, not from the message."
+  },
+  {
+    "id": "advance_fee",
+    "name": "Advance Fee Fraud",
+    "description": "Victim is asked to pay upfront fees, taxes, or deposits to receive a larger sum, prize, or service that never materializes.",
+    "category": "advance_fee",
+    "severity": "medium",
+    "trigger_factors": ["NEW_PAYEE", "SUSPICIOUS_REFERENCE"],
+    "keywords": ["fee", "deposit", "processing", "release", "funds", "prize", "lottery", "inheritance"],
+    "recommended_action": "Be highly suspicious of requests for upfront payments. Legitimate transactions do not require advance fees to release funds."
+  },
+  {
+    "id": "overpayment_scam",
+    "name": "Overpayment Scam",
+    "description": "Fraudster sends a payment larger than required and asks for the difference to be refunded, typically using fraudulent funds.",
+    "category": "refund_fraud",
+    "severity": "medium",
+    "trigger_factors": ["NEW_PAYEE", "AMOUNT_SPIKE"],
+    "keywords": ["overpayment", "refund", "difference", "excess", "return"],
+    "recommended_action": "Wait for the original payment to fully clear before issuing any refunds. Verify the payment source is legitimate."
+  },
+  {
+    "id": "unusual_hours",
+    "name": "After-Hours Transaction",
+    "description": "Transaction initiated outside normal business hours may indicate unauthorized access or social engineering attack.",
+    "category": "account_compromise",
+    "severity": "medium",
+    "trigger_factors": ["UNUSUAL_TIMING"],
+    "keywords": [],
+    "recommended_action": "Confirm you authorized this transaction. Review recent account activity and check for unauthorized access."
+  },
+  {
+    "id": "amount_anomaly",
+    "name": "Significant Amount Deviation",
+    "description": "Transaction amount is significantly higher than typical spending patterns, which may indicate fraud or error.",
+    "category": "anomaly",
+    "severity": "medium",
+    "trigger_factors": ["AMOUNT_SPIKE"],
+    "keywords": [],
+    "recommended_action": "Verify this is an expected payment and the amount is correct before authorizing."
+  },
+  {
+    "id": "tech_support_scam",
+    "name": "Tech Support Scam",
+    "description": "Fraudster poses as technical support and convinces victim to make payments for fake services or software.",
+    "category": "impersonation",
+    "severity": "medium",
+    "trigger_factors": ["NEW_PAYEE", "SUSPICIOUS_REFERENCE"],
+    "keywords": ["support", "technical", "virus", "security", "license", "microsoft", "apple"],
+    "recommended_action": "Legitimate tech companies do not cold-call customers. Contact the company directly using official channels."
+  },
+  {
+    "id": "mandate_fraud",
+    "name": "Mandate Fraud",
+    "description": "Fraudster intercepts or manipulates payment instructions to redirect funds to their account.",
+    "category": "payment_diversion",
+    "severity": "critical",
+    "trigger_factors": ["NEW_PAYEE", "AMOUNT_SPIKE"],
+    "keywords": ["mandate", "standing order", "direct debit", "payment details", "bank change"],
+    "recommended_action": "Verify any requests to change payment details through a secondary channel. Implement dual authorization for payment changes."
+  },
+  {
+    "id": "velocity_fraud",
+    "name": "Rapid Transaction Pattern",
+    "description": "Multiple transactions in quick succession may indicate automated fraud or account takeover.",
+    "category": "account_compromise",
+    "severity": "high",
+    "trigger_factors": ["VELOCITY"],
+    "keywords": [],
+    "recommended_action": "Review all recent transactions. Consider temporarily freezing the account and resetting credentials."
+  }
+]

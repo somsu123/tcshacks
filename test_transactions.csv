@@ -1,0 +1,6 @@
+amount,payee,reference,timestamp,payee_is_new
+1500,ACME Corporation,Invoice 1001,2026-01-12T09:00:00Z,true
+250,Office Supplies Ltd,Stationery Order,2026-01-12T10:30:00Z,false
+4500,Urgent Contractors,Emergency Repair,2026-01-12T02:15:00Z,true
+890,IT Services Pro,Monthly Support,2026-01-12T14:00:00Z,false
+3200,New Vendor Ltd,Equipment Purchase,2026-01-12T23:45:00Z,true

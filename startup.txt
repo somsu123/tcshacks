@@ -1,0 +1,10 @@
+# Azure App Service Startup Command
+#
+# Set this in Azure Portal:
+#   Configuration > General settings > Startup Command
+#
+# Or via Azure CLI:
+#   az webapp config set --resource-group <rg> --name <app> --startup-file "<command>"
+#
+# Command:
+gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 -w 4 app.main:app
